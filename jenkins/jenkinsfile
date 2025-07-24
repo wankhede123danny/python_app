@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage('Clone Repo') {
             steps {
-                git 'https://github.com/your-username/three-tier-app.git'
+                git 'https://github.com/wankhede123danny/python_app.git'
             }
         }
 
