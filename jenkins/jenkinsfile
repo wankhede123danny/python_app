@@ -1,0 +1,66 @@
+pipeline {
+    agent any
+
+    environment {
+        APP_IMAGE = "flask-app:v1"
+        MYSQL_CONTAINER = "mysql-db"
+        APP_CONTAINER = "flask-app"
+        NGINX_CONTAINER = "nginx-proxy"
+    }
+
+    stages {
+        stage('Clone Repo') {
+            steps {
+                git 'https://github.com/your-username/three-tier-app.git'
+            }
+        }
+
+        stage('Build Flask App Image') {
+            steps {
+                sh 'docker build -t flask-app:v1 .'
+            }
+        }
+
+        stage('Start MySQL') {
+            steps {
+                sh '''
+                docker run -d --name mysql-db \
+                    -e MYSQL_ROOT_PASSWORD=password \
+                    -e MYSQL_DATABASE=mydb \
+                    -p 3306:3306 \
+                    --network mynet \
+                    mysql:5.7
+                '''
+            }
+        }
+
+        stage('Start Flask App') {
+            steps {
+                sh '''
+                docker run -d --name flask-app \
+                    --network mynet \
+                    flask-app:v1
+                '''
+            }
+        }
+
+        stage('Start Nginx') {
+            steps {
+                sh '''
+                docker run -d --name nginx-proxy \
+                    -v $PWD/nginx/default.conf:/etc/nginx/conf.d/default.conf \
+                    -p 80:80 \
+                    --network mynet \
+                    nginx:latest
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "App deployment complete!"
+        }
+    }
+}
+
